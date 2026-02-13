@@ -1,7 +1,9 @@
 {
-  description = "A Nix-flake-based Node.js development environment";
+  description = "CLI memo tool for web pages";
 
-  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1"; # unstable Nixpkgs
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  };
 
   outputs =
     { self, ... }@inputs:
@@ -20,26 +22,18 @@
           f {
             pkgs = import inputs.nixpkgs {
               inherit system;
-              overlays = [ inputs.self.overlays.default ];
             };
           }
         );
     in
     {
-      overlays.default = final: prev: rec {
-        nodejs = prev.nodejs;
-        yarn = (prev.yarn.override { inherit nodejs; });
-      };
-
       devShells = forEachSupportedSystem (
         { pkgs }:
         {
           default = pkgs.mkShellNoCC {
             packages = with pkgs; [
-              node2nix
-              nodejs
-              nodePackages.pnpm
-              yarn
+              nodejs_latest
+              pnpm
             ];
           };
         }
