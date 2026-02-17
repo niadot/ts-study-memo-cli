@@ -1,7 +1,7 @@
 import { Command } from "commander";
-import { listCommand } from "./commands/list.js";
 import { addCommand } from "./commands/add.js";
 import { deleteCommand } from "./commands/delete.js";
+import { listCommand } from "./commands/list.js";
 
 const program = new Command();
 program.name("memo");
