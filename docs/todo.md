@@ -4,7 +4,7 @@
 
 ## 現在の状況
 
-Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add` 完了。次は `delete`, `search`, `open`。
+Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete` 完了。次は `search`, `open`。
 
 ## 未着手
 
@@ -243,4 +243,16 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add` �
   - `import { url } from "node:inspector"` のような不要な import に注意
   - `.toISOString` ではなく `.toISOString()`（関数呼び出しなので括弧が必要）
   - 1回しか使わない値は変数に入れず、オブジェクトリテラルに直接式を書ける
-- 次にやること: 残りのコマンド実装（delete, search, open）→ description の追加 → list の表示整形・`--recent N` 対応
+- `src/commands/delete.ts` を実装
+  - `load()` → `filter()` で該当 id を除外 → `save()` の流れ
+  - 存在しない id の判定: `filter` 後の配列の長さを元と比較する方法を採用
+  - `find` + `filter` 版（条件の `===` / `!==` 使い分けが必要）と `filter` + 長さ比較版の2案を検討 → 後者を採用（ミスが起きにくい）
+  - `index.ts` に登録し、`pnpm build && pnpm start delete <id>` で動作確認済み
+- 学んだこと:
+  - `find()` / `filter()` の引数はコールバック関数。`(memo) => memo.id === id` のように書く
+  - `filter()` は元の配列を変更しない（新しい配列を返す）。結果を代入する必要がある
+  - `find()` は見つからないと `undefined` を返す。`!` で否定して「見つからなかったとき」を判定
+  - `=`（代入）と `===`（厳密比較）の違い。`if` の条件で `=` を使うと代入になってしまう
+  - 「id が見つからない」は例外ではなく正常な判定ロジックなので、`try-catch` ではなく `if` で扱う
+  - `return console.log(...)` で早期リターンできるが、`console.log(); return;` と分ける方が意図が明確
+- 次にやること: 残りのコマンド実装（search, open）→ description の追加 → list の表示整形・`--recent N` 対応
