@@ -4,7 +4,7 @@
 
 ## 現在の状況
 
-Step 2 完了。`feature/types-and-store` ブランチ。store.ts + テスト完了。次は Step 3 コマンド実装。
+Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add` 完了。次は `delete`, `search`, `open`。
 
 ## 未着手
 
@@ -195,3 +195,52 @@ Step 2 完了。`feature/types-and-store` ブランチ。store.ts + テスト完
 
 - 全5ケース通過（`pnpm test`）
 - 次にやること: Step 3 コマンド実装
+
+### 2026-02-16 セッション03
+- `feature/types-and-store` → develop へPR作成・マージ完了
+- ブランチ切り替え時に stash → pop でコンフリクト発生、`--theirs` で解消
+- 学んだこと:
+  - `git stash` / `git stash pop`: 未コミットの変更を一時退避・復元
+  - stash pop のコンフリクト時は stash が自動削除されない（`git stash drop` で手動削除）
+  - `git checkout --theirs <file>`: コンフリクト時にブランチ側の内容を採用
+  - `git fetch --prune`: リモートで削除されたブランチの追跡参照もクリーンアップ
+  - `git branch -d`: マージ済みブランチの安全な削除（未マージは `-D` が必要）
+- Step 3 コマンド実装に着手
+- `feature/commands` ブランチを作成
+- `src/index.ts` を実装（commander のエントリポイント）
+  - `new Command()` でインスタンス生成、`.name("memo")` でコマンド名設定
+  - 各コマンド登録は関数で分離する方針（`addCommand(program)` 等）→ まだコメントアウト中
+  - `program.parse()` で `process.argv` を解析・実行
+- `pnpm build && pnpm start --help` で動作確認済み（`Usage: memo` と表示）
+- 学んだこと:
+  - commander: `new Command()` → `.name()` → `.command()` → `.parse()` の流れ
+  - `process.argv` の構造: `[node, script, ...args]`。commander は `argv[1]` からプログラム名を取るが、`.name()` で明示する方が確実
+  - `pnpm start -- --help` だと `--` が commander に渡されてエラーになる。`pnpm start --help` で OK（pnpm がスクリプトの引数として渡してくれる）
+  - エントリポイントはトップレベルにそのまま書く（関数で囲う必要なし。他から呼ばれないため）
+- `src/commands/list.ts` を実装（全件表示）
+  - `Command` を引数に受け取り `.command("list").action()` でサブコマンドを登録
+  - `load()` でデータ読み込み、`alldata.memos` を表示。0件なら「メモがありません」
+  - `index.ts` で `import { listCommand }` して登録
+  - `pnpm build && pnpm start list` で動作確認済み（「メモがありません」と表示）
+- 学んだこと:
+  - `import type { Command }` — 型だけを import する構文。ビルド後の JS に残らない
+  - `.command()` が内部で新しい `Command` インスタンスを生成するので、コマンドモジュール側で `new Command()` は不要
+  - `!==`（厳密比較）と `!=`（型変換あり）の違い。TypeScript では `!==` を使う習慣
+  - `memo list` のように直接実行するには `package.json` の `bin` 設定 + グローバルリンクが必要。今は `pnpm start list` で開発
+  - `.description()` はヘルプ表示用。なくても動く
+- `src/commands/add.ts` を実装
+  - `.argument("<url>")`, `.argument("[title]")`, `.option("--tags <values>")` で引数・オプションを定義
+  - `load()` → Memo オブジェクト作成 → `push` → `save()` の流れ
+  - `index.ts` に登録し、`pnpm build && pnpm start add "https://example.com" "テスト" --tags test,sample` で動作確認済み
+  - `pnpm start list` で追加されたメモが表示されることも確認
+- 学んだこと:
+  - `.argument("<required>")` は必須、`.argument("[optional]")` は任意
+  - `.action()` のコールバック引数: 位置引数が先、最後に options オブジェクト
+  - `??`（Null合体演算子）: 左辺が `null` / `undefined` のときだけ右辺を返す。`?:` は空文字も falsy 扱い
+  - オブジェクトリテラルの shorthand property: `url: url` → `url` と省略可（キー名と変数名が同じ場合）
+  - オブジェクトリテラルはキー名を指定するので、`title: title ?? url` のように変数名と異なる値を入れられる
+  - `--tags foo,bar` は文字列で渡ってくるので `.split(",")` で配列にする
+  - `import { url } from "node:inspector"` のような不要な import に注意
+  - `.toISOString` ではなく `.toISOString()`（関数呼び出しなので括弧が必要）
+  - 1回しか使わない値は変数に入れず、オブジェクトリテラルに直接式を書ける
+- 次にやること: 残りのコマンド実装（delete, search, open）→ description の追加 → list の表示整形・`--recent N` 対応
