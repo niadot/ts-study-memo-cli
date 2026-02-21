@@ -13,7 +13,7 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 
 ## 進行中
 
-- [ ] Step 3: コマンド実装 — `open` 完了、`add` に `--desc` オプション追加済み。残り: list/search に description 表示、list 表示整形・`--recent N` 対応
+- [ ] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
 
 ## 完了
 
@@ -331,3 +331,19 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `JSON.stringify` は値が `undefined` のプロパティをキーごと省略する（`null` は残る）
   - `undefined` = 「存在しない」、`null` = 「明示的に空」という使い分け
 - 次にやること: list/search に description 表示 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション05 (続き)
+- list/search の表示整形を実装
+  - C案（インデント付きブロック表示）を採用
+  - `src/utils/format.ts` に `formatMemo(memo: Memo): string` を切り出し
+  - `list.ts` と `search.ts` の両方から共通関数を利用
+  - description・tags がない場合は行ごと省略（`if` で条件分岐して `+=` で文字列を組み立てる）
+  - 日付は `.split("T")[0]` で日付部分のみ表示、`updatedAt` があればそちらを優先
+  - `.sort()` で新しい順（降順）にソート
+- `--recent N` は不要と判断し保留
+- 学んだこと:
+  - `.sort()` は破壊的メソッド（元の配列を変更する）。非破壊版は `.toSorted()`（ES2023）
+  - `.sort()` の比較関数: 負の数 → `a` を前、正の数 → `b` を前
+  - `for` は文（statement）。値を返さない。`filter` 等のメソッドは式（expression）
+  - 関数の切り出し: 単一責任（1件の整形）に絞ると使い回しやすい
+- 次にやること: Step 3 完了 → Step 4（タイトル自動取得）
