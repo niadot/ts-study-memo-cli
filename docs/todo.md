@@ -4,18 +4,19 @@
 
 ## 現在の状況
 
-Step 4 進行中。`feature/fetch-title` ブランチ。fetch-title.ts 実装済み、add コマンドに統合済み。
+Step 5 開始前。`test/expand-tests` ブランチ。Step 4 完了済み。
 
 ## 未着手
 
-- [ ] Step 5: テスト拡充
+（なし）
 
 ## 進行中
 
-- [ ] Step 4: タイトル自動取得 — fetch-title.ts 実装済み、add コマンドに統合済み
+- [ ] Step 5: テスト拡充 — `test/expand-tests` ブランチ作成済み。未着手
 
 ## 完了（直近）
 
+- [x] Step 4: タイトル自動取得 — fetch-title.ts 実装、add コマンドに統合、PR#6 マージ済み
 - [x] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
 
 ## 完了
