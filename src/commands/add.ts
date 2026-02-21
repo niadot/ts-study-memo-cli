@@ -9,12 +9,14 @@ export function addCommand(program: Command) {
     .argument("<url>")
     .argument("[title]")
     .option("--tags <values>")
+    .option("--desc <text>")
     .action(async (url, title, options) => {
       const data = await load();
       const newMemo: Memo = {
         id: generateId(),
         url,
         title: title ?? url,
+        description: options.desc,
         tags: options.tags ? options.tags.split(",") : [],
         createdAt: new Date().toISOString(),
       };

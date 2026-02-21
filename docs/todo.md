@@ -4,7 +4,7 @@
 
 ## 現在の状況
 
-Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search` 完了。次は `open`。
+Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search`, `open` 完了。次は description 追加。
 
 ## 未着手
 
@@ -13,7 +13,7 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 
 ## 進行中
 
-- [ ] Step 3: コマンド実装 — `open` が残り。その後 description 追加、list 表示整形・`--recent N` 対応
+- [ ] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
 
 ## 完了
 
@@ -35,6 +35,7 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 - [x] Step 3-3: `src/commands/add.ts` - メモ追加
 - [x] Step 3-4: `src/commands/delete.ts` - メモ削除
 - [x] Step 3-5: `src/commands/search.ts` - キーワード検索
+- [x] Step 3-6: `src/commands/open.ts` - ブラウザでURL表示
 
 ## 決定事項メモ
 
@@ -278,8 +279,71 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `includes()` — 文字列メソッド。指定した文字列が含まれていれば `true`
   - 複数条件を `||` でまとめれば `filter` 1回で済む。3回 `filter` すると重複が発生する
 - ドキュメント整備:
-  - `docs/todo.md`: 「未着手」「進行中」「完了」セクションを実態に合わせて更新
-  - `CLAUDE.md`: 実行コマンドの `--` を削除（`pnpm start -- <command>` → `pnpm start <command>`）
-  - `.gitignore` の確認 → 追加不要。`tsconfig.*.tsbuildinfo` の残骸を手動削除
-- PR #4 作成: `feature/commands` → `develop`（list, add, delete, search の4コマンド）
-- 次にやること: `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
+  - `CLAUDE.md` 整理（Tech Stack, Project Structure, Development Commands をコンパクトに）
+  - `CLAUDE.md` に進捗記録の自動更新ルールを追加
+- `feature/commands` ブランチを restore して `open` コマンド実装の準備
+- 現在のブランチ: `feature/commands`
+- 次にやること: `open` コマンド実装 → description 追加 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション02
+- `open` コマンドの仕様確認・方針決定
+  - `memo open <id>` — 指定 id のメモの URL をデフォルトブラウザで開く
+  - ブラウザを開く方法: npm パッケージ `open` を使う（A案）に決定
+    - B案（`child_process` で OS ごとにコマンドを呼び分ける）は学習的には面白いが、OS 差異のエッジケース対応が大変
+    - 現場では「本質でない部分は信頼できるライブラリに任せる」が基本方針
+  - 処理の流れ: `load()` → `find()` で id 検索 → 見つからなければメッセージ → `await open(url)` でブラウザを開く
+  - `delete` と似た構造だが、データ変更がないので `save()` 不要
+- 次にやること: `pnpm add open` → `src/commands/open.ts` 実装 → `index.ts` に登録
+
+### 2026-02-21 セッション03
+- Claude Code hooks で todo.md 更新リマインドを実装
+  - `.claude/hooks/check-todo-updated.sh` — `git diff --name-only HEAD` でファイル変更を検知し、変更があれば `block` decision でリマインドを出す
+  - `.claude/settings.json` — `PostToolUse` hook で `Edit`/`Write`/`Bash` の実行後にスクリプトを発火
+  - `.gitignore` に `.claude/settings.local.json` を追記（個人設定は gitignore、共有設定はコミット対象）
+- 学んだこと:
+  - Claude Code hooks: `PostToolUse` イベントでツール実行後にスクリプトを発火できる
+  - `matcher` でツール名を正規表現で指定（`Edit|Write|Bash`）
+  - hook スクリプトから JSON で `decision: "block"` を返すとリマインドメッセージが表示される
+  - `$CLAUDE_PROJECT_DIR` 環境変数でプロジェクトルートを参照可能
+
+### 2026-02-21 セッション04
+- `src/commands/open.ts` を実装
+  - `memo open <id>` — 指定 id のメモの URL をデフォルトブラウザで開く
+  - npm パッケージ `open`（v11.0.0）をインストール（`pnpm add open`）
+  - `import open from "open"` — デフォルトエクスポートなので `{}` なしで import
+  - 処理の流れ: `load()` → `find()` で id 検索 → 見つからなければメッセージ → `await open(url)` でブラウザを開く
+  - `delete` と似た構造だが、データ変更がないので `save()` 不要
+  - `index.ts` に登録し、`pnpm build && pnpm start open <id>` で動作確認済み
+- 学んだこと:
+  - `find()` — 配列の標準メソッド。コールバック関数を渡し、最初に条件を満たした要素を返す。見つからなければ `undefined`
+  - `find()` vs `filter()`: `find` は最初の1つを返す、`filter` は条件を満たす全要素を配列で返す
+  - `find()` にはコールバック関数を渡す（`find(id)` ではなく `find((memo) => memo.id === id)`）
+- Claude Code hooks の修正:
+  - `PostToolUse` では `decision: "block"` が機能しないことが判明（ツール実行**後**なのでブロックする意味がない）
+  - `hookSpecificOutput` + `additionalContext` に変更してリマインドメッセージが届くようになった
+- 次にやること: description 追加 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション05
+- `add` コマンドに `--desc <text>` オプションを追加
+  - `.option("--desc <text>")` で定義、`description: options.desc` で Memo オブジェクトに代入
+  - `--desc` 未指定時は `options.desc` が `undefined` → `JSON.stringify` が `undefined` のプロパティを省略するため JSON に残らない
+- 学んだこと:
+  - `JSON.stringify` は値が `undefined` のプロパティをキーごと省略する（`null` は残る）
+  - `undefined` = 「存在しない」、`null` = 「明示的に空」という使い分け
+- 次にやること: list/search に description 表示 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション05 (続き)
+- list/search の表示整形を実装
+  - C案（インデント付きブロック表示）を採用
+  - `src/utils/format.ts` に `formatMemo(memo: Memo): string` を切り出し
+  - `list.ts` と `search.ts` の両方から共通関数を利用
+  - description・tags がない場合は行ごと省略（`if` で条件分岐して `+=` で文字列を組み立てる）
+  - 日付は `.split("T")[0]` で日付部分のみ表示、`updatedAt` があればそちらを優先
+  - `.sort()` で新しい順（降順）にソート
+- `--recent N` は不要と判断し保留
+- 学んだこと:
+  - `.sort()` は破壊的メソッド（元の配列を変更する）。非破壊版は `.toSorted()`（ES2023）
+  - `.sort()` の比較関数: 負の数 → `a` を前、正の数 → `b` を前
+  - `for` は文（statement）。値を返さない。`filter` 等のメソッドは式（expression）
+  - 関数の切り出し: 単一責任（1件の整形）に絞ると使い回しやすい
+- 次にやること: Step 3 完了 → Step 4（タイトル自動取得）

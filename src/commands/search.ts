@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import { load } from "../lib/store.js";
+import { formatMemo } from "../utils/format.js";
 
 export function searchCommand(program: Command) {
   program
@@ -14,7 +15,9 @@ export function searchCommand(program: Command) {
           memo.tags.some((tag) => tag.includes(keyword)),
       );
       if (filtered.length !== 0) {
-        return console.log(filtered);
+        for (const memo of filtered) {
+          console.log(formatMemo(memo));
+        }
       } else {
         return console.log("検索結果はゼロ件です");
       }
