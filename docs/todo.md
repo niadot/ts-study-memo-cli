@@ -4,16 +4,19 @@
 
 ## 現在の状況
 
-Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search`, `open` 完了。次は description 追加。
+Step 4 進行中。`feature/fetch-title` ブランチ。fetch-title.ts 実装済み、add コマンドに統合済み。
 
 ## 未着手
 
-- [ ] Step 4: タイトル自動取得 (fetch-title)
 - [ ] Step 5: テスト拡充
 
 ## 進行中
 
-- [ ] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
+- [ ] Step 4: タイトル自動取得 — fetch-title.ts 実装済み、add コマンドに統合済み
+
+## 完了（直近）
+
+- [x] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
 
 ## 完了
 
@@ -347,3 +350,20 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `for` は文（statement）。値を返さない。`filter` 等のメソッドは式（expression）
   - 関数の切り出し: 単一責任（1件の整形）に絞ると使い回しやすい
 - 次にやること: Step 3 完了 → Step 4（タイトル自動取得）
+
+### 2026-02-22 セッション01
+- Step 4: タイトル自動取得を実装
+  - `src/lib/fetch-title.ts` を新規作成
+    - `fetchTitle(url: string): Promise<string>` — URL から HTML を取得し `<title>` を返す
+    - Node.js 標準の `fetch()` で HTTP リクエスト、cheerio でパース
+    - `$("head > title").text()` で `<head>` 直下の `<title>` のみ取得（SVG 内の `<title>` を除外）
+    - `try-catch` で全エラーを捕捉し、失敗時は URL をそのまま返す
+    - `<title>` が空文字の場合も `|| url` で URL にフォールバック
+  - `src/commands/add.ts` を修正
+    - `title ?? await fetchTitle(url)` で title 省略時にタイトル自動取得
+- 学んだこと:
+  - `fetch()` は HTTP エラー（403 等）でも例外を投げない（Promise は resolve する）
+  - cheerio の `$("title").text()` は全マッチ要素のテキストを連結する。`$("title").first().text()` や `$("head > title")` で絞り込む必要がある
+  - CSS セレクタの `>` は子結合子（child combinator）。直接の子要素だけにマッチ
+  - サイトによっては User-Agent でレスポンスを変える（ブラウザと `fetch` で異なる HTML が返る）
+  - `??` の右辺は左辺が `null`/`undefined` のときだけ評価される（短絡評価）

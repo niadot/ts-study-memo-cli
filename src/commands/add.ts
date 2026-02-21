@@ -2,6 +2,7 @@ import type { Command } from "commander";
 import { load, save } from "../lib/store.js";
 import type { Memo } from "../lib/types.js";
 import { generateId } from "../utils/id.js";
+import { fetchTitle } from "../lib/fetch-title.js";
 
 export function addCommand(program: Command) {
   program
@@ -15,7 +16,7 @@ export function addCommand(program: Command) {
       const newMemo: Memo = {
         id: generateId(),
         url,
-        title: title ?? url,
+        title: title ?? await fetchTitle(url),
         description: options.desc,
         tags: options.tags ? options.tags.split(",") : [],
         createdAt: new Date().toISOString(),
