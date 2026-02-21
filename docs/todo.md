@@ -4,17 +4,16 @@
 
 ## 現在の状況
 
-Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete` 完了。次は `search`, `open`。
+Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search` 完了。次は `open`。
 
 ## 未着手
 
-- [ ] Step 3: コマンド実装 (add, list, search, delete, open)
 - [ ] Step 4: タイトル自動取得 (fetch-title)
 - [ ] Step 5: テスト拡充
 
 ## 進行中
 
-(なし)
+- [ ] Step 3: コマンド実装 — `open` が残り。その後 description 追加、list 表示整形・`--recent N` 対応
 
 ## 完了
 
@@ -31,6 +30,11 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 - [x] Step 2-3: `src/utils/id.ts` - ID 生成ユーティリティ
 - [x] Step 2-2: `src/lib/store.ts` - JSON ファイルの load / save
 - [x] Step 2-4: `tests/store.test.ts` - store のテスト（5ケース）
+- [x] Step 3-1: `src/index.ts` - commander エントリポイント
+- [x] Step 3-2: `src/commands/list.ts` - 一覧表示
+- [x] Step 3-3: `src/commands/add.ts` - メモ追加
+- [x] Step 3-4: `src/commands/delete.ts` - メモ削除
+- [x] Step 3-5: `src/commands/search.ts` - キーワード検索
 
 ## 決定事項メモ
 
@@ -255,4 +259,22 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `=`（代入）と `===`（厳密比較）の違い。`if` の条件で `=` を使うと代入になってしまう
   - 「id が見つからない」は例外ではなく正常な判定ロジックなので、`try-catch` ではなく `if` で扱う
   - `return console.log(...)` で早期リターンできるが、`console.log(); return;` と分ける方が意図が明確
-- 次にやること: 残りのコマンド実装（search, open）→ description の追加 → list の表示整形・`--recent N` 対応
+- Biome 関連:
+  - `pnpm format` でフォーマット修正（インデント4→2スペース統一）、`pnpm lint --fix` で import 順整理
+  - VSCode の Biome 拡張がバイナリを見つけられない問題 → `.vscode/settings.json` で `biome.lspBin` を設定
+  - 原因: VSCode のワークスペースルートが `~` だったため相対パスが解決できなかった → プロジェクトフォルダを直接開いて解決
+  - Biome はRust製ネイティブバイナリなのでOS・アーキテクチャごとに別バイナリが必要。Prettier（JS製）と違い拡張機能に内蔵できない
+- 次にやること: `search` コマンド → `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション01
+- `src/commands/search.ts` を実装
+  - `memo search <keyword>` — タイトル・URL・タグを対象にキーワード検索
+  - 1回の `filter` で3つの条件を `||` でまとめる（重複回避）
+  - タグは配列なので `.some()` で要素ごとに `.includes()` 判定
+  - 0件のときは「検索結果はゼロ件です」と表示
+  - `index.ts` に登録し、`pnpm build && pnpm start search "キーワード"` で動作確認済み
+- 学んだこと:
+  - `some()` — 配列メソッド。要素のうち1つでも条件を満たせば `true` を返す
+  - `includes()` — 文字列メソッド。指定した文字列が含まれていれば `true`
+  - 複数条件を `||` でまとめれば `filter` 1回で済む。3回 `filter` すると重複が発生する
+- 次にやること: `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
