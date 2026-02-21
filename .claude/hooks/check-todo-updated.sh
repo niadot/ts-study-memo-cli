@@ -11,6 +11,8 @@ fi
 
 # 変更あり → リマインド
 jq -n '{
-  "decision": "block",
-  "reason": "ファイルに変更があります。docs/todo.md の進捗更新が必要か確認し、必要なら更新してください。"
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "ファイルに変更があります。docs/todo.md の進捗更新が必要か確認し、必要なら更新してください。"
+  }
 }'
