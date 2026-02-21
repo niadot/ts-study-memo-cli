@@ -4,7 +4,7 @@
 
 ## 現在の状況
 
-Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search` 完了。次は `open`。
+Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search`, `open` 完了。次は description 追加。
 
 ## 未着手
 
@@ -13,7 +13,7 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 
 ## 進行中
 
-- [ ] Step 3: コマンド実装 — `open` が残り。その後 description 追加、list 表示整形・`--recent N` 対応
+- [ ] Step 3: コマンド実装 — `open` 完了。残り: description 追加、list 表示整形・`--recent N` 対応
 
 ## 完了
 
@@ -35,6 +35,7 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 - [x] Step 3-3: `src/commands/add.ts` - メモ追加
 - [x] Step 3-4: `src/commands/delete.ts` - メモ削除
 - [x] Step 3-5: `src/commands/search.ts` - キーワード検索
+- [x] Step 3-6: `src/commands/open.ts` - ブラウザでURL表示
 
 ## 決定事項メモ
 
@@ -304,3 +305,20 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `matcher` でツール名を正規表現で指定（`Edit|Write|Bash`）
   - hook スクリプトから JSON で `decision: "block"` を返すとリマインドメッセージが表示される
   - `$CLAUDE_PROJECT_DIR` 環境変数でプロジェクトルートを参照可能
+
+### 2026-02-21 セッション04
+- `src/commands/open.ts` を実装
+  - `memo open <id>` — 指定 id のメモの URL をデフォルトブラウザで開く
+  - npm パッケージ `open`（v11.0.0）をインストール（`pnpm add open`）
+  - `import open from "open"` — デフォルトエクスポートなので `{}` なしで import
+  - 処理の流れ: `load()` → `find()` で id 検索 → 見つからなければメッセージ → `await open(url)` でブラウザを開く
+  - `delete` と似た構造だが、データ変更がないので `save()` 不要
+  - `index.ts` に登録し、`pnpm build && pnpm start open <id>` で動作確認済み
+- 学んだこと:
+  - `find()` — 配列の標準メソッド。コールバック関数を渡し、最初に条件を満たした要素を返す。見つからなければ `undefined`
+  - `find()` vs `filter()`: `find` は最初の1つを返す、`filter` は条件を満たす全要素を配列で返す
+  - `find()` にはコールバック関数を渡す（`find(id)` ではなく `find((memo) => memo.id === id)`）
+- Claude Code hooks の修正:
+  - `PostToolUse` では `decision: "block"` が機能しないことが判明（ツール実行**後**なのでブロックする意味がない）
+  - `hookSpecificOutput` + `additionalContext` に変更してリマインドメッセージが届くようになった
+- 次にやること: description 追加 → list 表示整形・`--recent N` 対応
