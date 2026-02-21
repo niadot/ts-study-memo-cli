@@ -3,67 +3,62 @@
 ## Project Overview
 
 TypeScript学習用のCLIメモツール。WebページのURLとメモを保存・検索できる。
-詳細な要件定義・設計は `docs/requirements.md` を参照。
-進捗・TODOは `docs/todo.md` を参照。
+
+- 要件定義・設計: `docs/requirements.md`
+- 進捗・TODO: `docs/todo.md`
 
 ## Rules
 
 - 実装は人間が行い、AIはコードレビューや相談相手の相棒である
 - ユーザーの学習をサポートできるように立ち回る
 - コードスタイルはリンターとフォーマッターに合わせる
-- `docs/todo.md` に随時メモ: 進捗、決定事項、気づき、コンテキスト
 - 新しいセッションではまず `docs/todo.md` を熟読する
 - ユーザーのメッセージごとに `docs/todo.md` の進捗更新が必要か確認し、必要なら更新する
 - コミット・プッシュ時は `docs/todo.md` の更新も含める（ユーザーに確認不要）
 
 ## Tech Stack
 
-- Lang: TypeScript (ESM) / Node.js / pnpm
-- Tools: tsup, commander, vitest, Biome, cheerio
+- Language: TypeScript (ESM) / Node.js
+- Package Manager: pnpm
+- Build: tsup
+- CLI: commander
+- Test: vitest
+- Linter / Formatter: Biome
+- HTML Parse: cheerio
 
 ## Project Structure
 
-- `src/index.ts` - エントリポイント (commander 設定)
-- `src/commands/` - 各コマンドの実装 (add, list, search, open, delete)
-- `src/lib/` - ビジネスロジック (store, types, fetch-title)
-- `src/utils/` - ユーティリティ (ID生成)
-- `tests/` - テスト（ルートに配置）
-- `docs/requirements.md` - 要件定義兼設計書
+```
+src/
+├── index.ts          # エントリポイント (commander 設定)
+├── commands/         # 各コマンドの実装 (add, list, search, open, delete)
+├── lib/              # ビジネスロジック (store, types, fetch-title)
+└── utils/            # ユーティリティ (ID生成)
+tests/                # テスト
+docs/
+├── requirements.md   # 要件定義兼設計書
+└── todo.md           # 進捗・TODO・セッション記録
+```
 
 ## Development Commands
 
 ```bash
-# 開発環境（direnvで自動ロードされる）
-direnv allow
-
-# 依存インストール
-pnpm install
-
-# ビルド
-pnpm build
-
-# 実行
-pnpm start <command> [args]
-
-# テスト
-pnpm test
-
-# 型チェック
-pnpm exec tsc --noEmit
-
-# リント
-pnpm lint
-
-# フォーマット
-pnpm format
+pnpm install          # 依存インストール
+pnpm build            # ビルド
+pnpm start <command>  # 実行
+pnpm test             # テスト
+pnpm exec tsc --noEmit  # 型チェック
+pnpm lint             # リント
+pnpm format           # フォーマット
 ```
 
 ## Git Convention
 
 ### ブランチ戦略
 
-- `main` → `develop` → `feature/*`, `fix/*`, `refactor/*`, `docs/*`, `test/*`
-- ブランチ名: プレフィックス + スラッシュ + ケバブケース (例: `feature/add-command`)
+`main` ← `develop` ← `feature/*`, `fix/*`, `refactor/*`, `docs/*`, `test/*`
+
+ブランチ名: プレフィックス + スラッシュ + ケバブケース (例: `feature/add-command`)
 
 ### コミットメッセージ
 
