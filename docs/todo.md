@@ -13,7 +13,7 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
 
 ## 進行中
 
-- [ ] Step 3: コマンド実装 — `open` 完了。残り: description 追加、list 表示整形・`--recent N` 対応
+- [ ] Step 3: コマンド実装 — `open` 完了、`add` に `--desc` オプション追加済み。残り: list/search に description 表示、list 表示整形・`--recent N` 対応
 
 ## 完了
 
@@ -322,3 +322,12 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `PostToolUse` では `decision: "block"` が機能しないことが判明（ツール実行**後**なのでブロックする意味がない）
   - `hookSpecificOutput` + `additionalContext` に変更してリマインドメッセージが届くようになった
 - 次にやること: description 追加 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション05
+- `add` コマンドに `--desc <text>` オプションを追加
+  - `.option("--desc <text>")` で定義、`description: options.desc` で Memo オブジェクトに代入
+  - `--desc` 未指定時は `options.desc` が `undefined` → `JSON.stringify` が `undefined` のプロパティを省略するため JSON に残らない
+- 学んだこと:
+  - `JSON.stringify` は値が `undefined` のプロパティをキーごと省略する（`null` は残る）
+  - `undefined` = 「存在しない」、`null` = 「明示的に空」という使い分け
+- 次にやること: list/search に description 表示 → list 表示整形・`--recent N` 対応
