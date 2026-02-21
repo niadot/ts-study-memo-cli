@@ -277,4 +277,9 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `some()` — 配列メソッド。要素のうち1つでも条件を満たせば `true` を返す
   - `includes()` — 文字列メソッド。指定した文字列が含まれていれば `true`
   - 複数条件を `||` でまとめれば `filter` 1回で済む。3回 `filter` すると重複が発生する
+- ドキュメント整備:
+  - `docs/todo.md`: 「未着手」「進行中」「完了」セクションを実態に合わせて更新
+  - `CLAUDE.md`: 実行コマンドの `--` を削除（`pnpm start -- <command>` → `pnpm start <command>`）
+  - `.gitignore` の確認 → 追加不要。`tsconfig.*.tsbuildinfo` の残骸を手動削除
+- PR #4 作成: `feature/commands` → `develop`（list, add, delete, search の4コマンド）
 - 次にやること: `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
