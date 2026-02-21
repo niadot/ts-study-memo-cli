@@ -277,4 +277,30 @@ Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, 
   - `some()` — 配列メソッド。要素のうち1つでも条件を満たせば `true` を返す
   - `includes()` — 文字列メソッド。指定した文字列が含まれていれば `true`
   - 複数条件を `||` でまとめれば `filter` 1回で済む。3回 `filter` すると重複が発生する
-- 次にやること: `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
+- ドキュメント整備:
+  - `CLAUDE.md` 整理（Tech Stack, Project Structure, Development Commands をコンパクトに）
+  - `CLAUDE.md` に進捗記録の自動更新ルールを追加
+- `feature/commands` ブランチを restore して `open` コマンド実装の準備
+- 現在のブランチ: `feature/commands`
+- 次にやること: `open` コマンド実装 → description 追加 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション02
+- `open` コマンドの仕様確認・方針決定
+  - `memo open <id>` — 指定 id のメモの URL をデフォルトブラウザで開く
+  - ブラウザを開く方法: npm パッケージ `open` を使う（A案）に決定
+    - B案（`child_process` で OS ごとにコマンドを呼び分ける）は学習的には面白いが、OS 差異のエッジケース対応が大変
+    - 現場では「本質でない部分は信頼できるライブラリに任せる」が基本方針
+  - 処理の流れ: `load()` → `find()` で id 検索 → 見つからなければメッセージ → `await open(url)` でブラウザを開く
+  - `delete` と似た構造だが、データ変更がないので `save()` 不要
+- 次にやること: `pnpm add open` → `src/commands/open.ts` 実装 → `index.ts` に登録
+
+### 2026-02-21 セッション03
+- Claude Code hooks で todo.md 更新リマインドを実装
+  - `.claude/hooks/check-todo-updated.sh` — `git diff --name-only HEAD` でファイル変更を検知し、変更があれば `block` decision でリマインドを出す
+  - `.claude/settings.json` — `PostToolUse` hook で `Edit`/`Write`/`Bash` の実行後にスクリプトを発火
+  - `.gitignore` に `.claude/settings.local.json` を追記（個人設定は gitignore、共有設定はコミット対象）
+- 学んだこと:
+  - Claude Code hooks: `PostToolUse` イベントでツール実行後にスクリプトを発火できる
+  - `matcher` でツール名を正規表現で指定（`Edit|Write|Bash`）
+  - hook スクリプトから JSON で `decision: "block"` を返すとリマインドメッセージが表示される
+  - `$CLAUDE_PROJECT_DIR` 環境変数でプロジェクトルートを参照可能
