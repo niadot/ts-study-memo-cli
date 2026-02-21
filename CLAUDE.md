@@ -41,7 +41,7 @@ pnpm install
 pnpm build
 
 # 実行
-pnpm start -- <command> [args]
+pnpm start <command> [args]
 
 # テスト
 pnpm test

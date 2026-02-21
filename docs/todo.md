@@ -4,17 +4,16 @@
 
 ## 現在の状況
 
-Step 2 完了。`feature/types-and-store` ブランチ。store.ts + テスト完了。次は Step 3 コマンド実装。
+Step 3 進行中。`feature/commands` ブランチ。`index.ts`, `list`, `add`, `delete`, `search` 完了。次は `open`。
 
 ## 未着手
 
-- [ ] Step 3: コマンド実装 (add, list, search, delete, open)
 - [ ] Step 4: タイトル自動取得 (fetch-title)
 - [ ] Step 5: テスト拡充
 
 ## 進行中
 
-(なし)
+- [ ] Step 3: コマンド実装 — `open` が残り。その後 description 追加、list 表示整形・`--recent N` 対応
 
 ## 完了
 
@@ -31,6 +30,11 @@ Step 2 完了。`feature/types-and-store` ブランチ。store.ts + テスト完
 - [x] Step 2-3: `src/utils/id.ts` - ID 生成ユーティリティ
 - [x] Step 2-2: `src/lib/store.ts` - JSON ファイルの load / save
 - [x] Step 2-4: `tests/store.test.ts` - store のテスト（5ケース）
+- [x] Step 3-1: `src/index.ts` - commander エントリポイント
+- [x] Step 3-2: `src/commands/list.ts` - 一覧表示
+- [x] Step 3-3: `src/commands/add.ts` - メモ追加
+- [x] Step 3-4: `src/commands/delete.ts` - メモ削除
+- [x] Step 3-5: `src/commands/search.ts` - キーワード検索
 
 ## 決定事項メモ
 
@@ -195,3 +199,82 @@ Step 2 完了。`feature/types-and-store` ブランチ。store.ts + テスト完
 
 - 全5ケース通過（`pnpm test`）
 - 次にやること: Step 3 コマンド実装
+
+### 2026-02-16 セッション03
+- `feature/types-and-store` → develop へPR作成・マージ完了
+- ブランチ切り替え時に stash → pop でコンフリクト発生、`--theirs` で解消
+- 学んだこと:
+  - `git stash` / `git stash pop`: 未コミットの変更を一時退避・復元
+  - stash pop のコンフリクト時は stash が自動削除されない（`git stash drop` で手動削除）
+  - `git checkout --theirs <file>`: コンフリクト時にブランチ側の内容を採用
+  - `git fetch --prune`: リモートで削除されたブランチの追跡参照もクリーンアップ
+  - `git branch -d`: マージ済みブランチの安全な削除（未マージは `-D` が必要）
+- Step 3 コマンド実装に着手
+- `feature/commands` ブランチを作成
+- `src/index.ts` を実装（commander のエントリポイント）
+  - `new Command()` でインスタンス生成、`.name("memo")` でコマンド名設定
+  - 各コマンド登録は関数で分離する方針（`addCommand(program)` 等）→ まだコメントアウト中
+  - `program.parse()` で `process.argv` を解析・実行
+- `pnpm build && pnpm start --help` で動作確認済み（`Usage: memo` と表示）
+- 学んだこと:
+  - commander: `new Command()` → `.name()` → `.command()` → `.parse()` の流れ
+  - `process.argv` の構造: `[node, script, ...args]`。commander は `argv[1]` からプログラム名を取るが、`.name()` で明示する方が確実
+  - `pnpm start -- --help` だと `--` が commander に渡されてエラーになる。`pnpm start --help` で OK（pnpm がスクリプトの引数として渡してくれる）
+  - エントリポイントはトップレベルにそのまま書く（関数で囲う必要なし。他から呼ばれないため）
+- `src/commands/list.ts` を実装（全件表示）
+  - `Command` を引数に受け取り `.command("list").action()` でサブコマンドを登録
+  - `load()` でデータ読み込み、`alldata.memos` を表示。0件なら「メモがありません」
+  - `index.ts` で `import { listCommand }` して登録
+  - `pnpm build && pnpm start list` で動作確認済み（「メモがありません」と表示）
+- 学んだこと:
+  - `import type { Command }` — 型だけを import する構文。ビルド後の JS に残らない
+  - `.command()` が内部で新しい `Command` インスタンスを生成するので、コマンドモジュール側で `new Command()` は不要
+  - `!==`（厳密比較）と `!=`（型変換あり）の違い。TypeScript では `!==` を使う習慣
+  - `memo list` のように直接実行するには `package.json` の `bin` 設定 + グローバルリンクが必要。今は `pnpm start list` で開発
+  - `.description()` はヘルプ表示用。なくても動く
+- `src/commands/add.ts` を実装
+  - `.argument("<url>")`, `.argument("[title]")`, `.option("--tags <values>")` で引数・オプションを定義
+  - `load()` → Memo オブジェクト作成 → `push` → `save()` の流れ
+  - `index.ts` に登録し、`pnpm build && pnpm start add "https://example.com" "テスト" --tags test,sample` で動作確認済み
+  - `pnpm start list` で追加されたメモが表示されることも確認
+- 学んだこと:
+  - `.argument("<required>")` は必須、`.argument("[optional]")` は任意
+  - `.action()` のコールバック引数: 位置引数が先、最後に options オブジェクト
+  - `??`（Null合体演算子）: 左辺が `null` / `undefined` のときだけ右辺を返す。`?:` は空文字も falsy 扱い
+  - オブジェクトリテラルの shorthand property: `url: url` → `url` と省略可（キー名と変数名が同じ場合）
+  - オブジェクトリテラルはキー名を指定するので、`title: title ?? url` のように変数名と異なる値を入れられる
+  - `--tags foo,bar` は文字列で渡ってくるので `.split(",")` で配列にする
+  - `import { url } from "node:inspector"` のような不要な import に注意
+  - `.toISOString` ではなく `.toISOString()`（関数呼び出しなので括弧が必要）
+  - 1回しか使わない値は変数に入れず、オブジェクトリテラルに直接式を書ける
+- `src/commands/delete.ts` を実装
+  - `load()` → `filter()` で該当 id を除外 → `save()` の流れ
+  - 存在しない id の判定: `filter` 後の配列の長さを元と比較する方法を採用
+  - `find` + `filter` 版（条件の `===` / `!==` 使い分けが必要）と `filter` + 長さ比較版の2案を検討 → 後者を採用（ミスが起きにくい）
+  - `index.ts` に登録し、`pnpm build && pnpm start delete <id>` で動作確認済み
+- 学んだこと:
+  - `find()` / `filter()` の引数はコールバック関数。`(memo) => memo.id === id` のように書く
+  - `filter()` は元の配列を変更しない（新しい配列を返す）。結果を代入する必要がある
+  - `find()` は見つからないと `undefined` を返す。`!` で否定して「見つからなかったとき」を判定
+  - `=`（代入）と `===`（厳密比較）の違い。`if` の条件で `=` を使うと代入になってしまう
+  - 「id が見つからない」は例外ではなく正常な判定ロジックなので、`try-catch` ではなく `if` で扱う
+  - `return console.log(...)` で早期リターンできるが、`console.log(); return;` と分ける方が意図が明確
+- Biome 関連:
+  - `pnpm format` でフォーマット修正（インデント4→2スペース統一）、`pnpm lint --fix` で import 順整理
+  - VSCode の Biome 拡張がバイナリを見つけられない問題 → `.vscode/settings.json` で `biome.lspBin` を設定
+  - 原因: VSCode のワークスペースルートが `~` だったため相対パスが解決できなかった → プロジェクトフォルダを直接開いて解決
+  - Biome はRust製ネイティブバイナリなのでOS・アーキテクチャごとに別バイナリが必要。Prettier（JS製）と違い拡張機能に内蔵できない
+- 次にやること: `search` コマンド → `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
+
+### 2026-02-21 セッション01
+- `src/commands/search.ts` を実装
+  - `memo search <keyword>` — タイトル・URL・タグを対象にキーワード検索
+  - 1回の `filter` で3つの条件を `||` でまとめる（重複回避）
+  - タグは配列なので `.some()` で要素ごとに `.includes()` 判定
+  - 0件のときは「検索結果はゼロ件です」と表示
+  - `index.ts` に登録し、`pnpm build && pnpm start search "キーワード"` で動作確認済み
+- 学んだこと:
+  - `some()` — 配列メソッド。要素のうち1つでも条件を満たせば `true` を返す
+  - `includes()` — 文字列メソッド。指定した文字列が含まれていれば `true`
+  - 複数条件を `||` でまとめれば `filter` 1回で済む。3回 `filter` すると重複が発生する
+- 次にやること: `open` コマンド → description 追加 → list 表示整形・`--recent N` 対応
