@@ -4,18 +4,19 @@
 
 ## 現在の状況
 
-Step 4 進行中。`feature/fetch-title` ブランチ。fetch-title.ts 実装済み、add コマンドに統合済み。
+Step 5 進行中。`test/expand-tests` ブランチ。A群（純粋関数テスト）完了。
 
 ## 未着手
 
-- [ ] Step 5: テスト拡充
+（なし）
 
 ## 進行中
 
-- [ ] Step 4: タイトル自動取得 — fetch-title.ts 実装済み、add コマンドに統合済み
+- [ ] Step 5: テスト拡充 — A群完了（format.ts 4ケース、id.ts 2ケース）。B群（モック必要）未着手
 
 ## 完了（直近）
 
+- [x] Step 4: タイトル自動取得 — fetch-title.ts 実装、add コマンドに統合、PR#6 マージ済み
 - [x] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
 
 ## 完了
@@ -367,3 +368,24 @@ Step 4 進行中。`feature/fetch-title` ブランチ。fetch-title.ts 実装済
   - CSS セレクタの `>` は子結合子（child combinator）。直接の子要素だけにマッチ
   - サイトによっては User-Agent でレスポンスを変える（ブラウザと `fetch` で異なる HTML が返る）
   - `??` の右辺は左辺が `null`/`undefined` のときだけ評価される（短絡評価）
+
+### 2026-02-25 セッション01
+- Step 5 テスト拡充に着手
+- テスト対象をA群（純粋関数）・B群（モック必要）・C群（テスト不要）に分類
+- A群から着手: `format.ts` → `id.ts` の順で実装
+- `tests/format.test.ts` — 4ケース:
+  1. 必須フィールドのみ（description なし、tags 空、updatedAt なし）
+  2. 全フィールドあり（description、tags、updatedAt すべてあり）
+  3. description のみあり
+  4. tags のみあり
+- `tests/id.test.ts` — 2ケース:
+  1. UUID v4 の形式に一致する（正規表現で検証）
+  2. 2回呼ぶと異なる値が返る
+- 学んだこと:
+  - `toBe` はプリミティブ値（文字列、数値）の完全一致、`toEqual` はオブジェクトの中身の比較
+  - `toMatch(/正規表現/)` で文字列のパターンマッチを検証できる
+  - `not.toBe` で「一致しないこと」を検証できる
+  - テンプレートリテラル内のインデントはそのまま文字列になるので、期待値の空白に注意が必要
+  - `import { it } from "node:test"` と `import { it } from "vitest"` を混ぜないこと（テストランナーが異なる）
+  - 純粋関数のテストは `beforeEach` / `afterEach` 不要で、入力→出力を検証するだけ
+- 次にやること: B群（`vi.mock` を使うテスト）に進む。`fetch-title.ts` が良い題材
