@@ -4,42 +4,16 @@
 
 ## 現在の状況
 
-Step 5 進行中。`test/expand-tests` ブランチ。A群（純粋関数テスト）完了。
-
-## 未着手
-
-（なし）
-
-## 進行中
-
-- [ ] Step 5: テスト拡充 — A群完了（format.ts 4ケース、id.ts 2ケース）。B群（モック必要）未着手
-
-## 完了（直近）
-
-- [x] Step 4: タイトル自動取得 — fetch-title.ts 実装、add コマンドに統合、PR#6 マージ済み
-- [x] Step 3: コマンド実装 — list/search 表示整形完了。`--recent N` は不要と判断し実装しない
+全 Step 完了。`develop` ブランチ。
 
 ## 完了
 
-- [x] 要件定義兼設計書の作成 (`docs/requirements.md`)
-- [x] CLAUDE.md の作成・整備
-- [x] flake.nix のカスタマイズ (nixos-unstable, pnpm, overlay削除)
-- [x] GitHub リポジトリ作成
-- [x] 技術選定 (tsup, Biome, ESM, crypto.randomUUID())
-- [x] ブランチ戦略・コミットメッセージ規約の策定
-- [x] docs/todo.md の作成・進捗管理フロー整備
-- [x] develop ブランチ作成
-- [x] Step 1: プロジェクト初期化 (pnpm init, ライブラリインストール, 設定ファイル作成)
-- [x] Step 2-1: `src/lib/types.ts` - Memo, MemoData の型定義
-- [x] Step 2-3: `src/utils/id.ts` - ID 生成ユーティリティ
-- [x] Step 2-2: `src/lib/store.ts` - JSON ファイルの load / save
-- [x] Step 2-4: `tests/store.test.ts` - store のテスト（5ケース）
-- [x] Step 3-1: `src/index.ts` - commander エントリポイント
-- [x] Step 3-2: `src/commands/list.ts` - 一覧表示
-- [x] Step 3-3: `src/commands/add.ts` - メモ追加
-- [x] Step 3-4: `src/commands/delete.ts` - メモ削除
-- [x] Step 3-5: `src/commands/search.ts` - キーワード検索
-- [x] Step 3-6: `src/commands/open.ts` - ブラウザでURL表示
+- [x] 準備: 要件定義, CLAUDE.md, flake.nix, GitHub リポジトリ, 技術選定, ブランチ戦略
+- [x] Step 1: プロジェクト初期化 — pnpm init, ライブラリインストール, 設定ファイル作成
+- [x] Step 2: 型定義・基盤 — types.ts, id.ts, store.ts（load/save + DI対応）, store テスト（5ケース）
+- [x] Step 3: コマンド実装 — add, list, search, delete, open + 表示整形（format.ts）
+- [x] Step 4: タイトル自動取得 — fetch-title.ts, add コマンドに統合（PR#6）
+- [x] Step 5: テスト拡充 — format.ts（4ケース）, id.ts（2ケース）, fetch-title.ts（3ケース）。全14テスト通過（PR#7）
 
 ## 決定事項メモ
 
@@ -388,4 +362,20 @@ Step 5 進行中。`test/expand-tests` ブランチ。A群（純粋関数テス�
   - テンプレートリテラル内のインデントはそのまま文字列になるので、期待値の空白に注意が必要
   - `import { it } from "node:test"` と `import { it } from "vitest"` を混ぜないこと（テストランナーが異なる）
   - 純粋関数のテストは `beforeEach` / `afterEach` 不要で、入力→出力を検証するだけ
-- 次にやること: B群（`vi.mock` を使うテスト）に進む。`fetch-title.ts` が良い題材
+- `tests/fetch-title.test.ts` — 3ケース（AIが実装）:
+  1. 正常なHTML → title が返る
+  2. title が空 → URL がフォールバック
+  3. fetch が失敗 → URL がフォールバック
+- `vi.stubGlobal("fetch", vi.fn())` でグローバルの `fetch` をモックに差し替え
+- `afterEach(() => vi.restoreAllMocks())` で各テスト後にモックをリセット
+- commands 系テストはモックだらけになり価値が低いためスキップと判断
+- 学んだこと:
+  - `vi.stubGlobal` — グローバル関数（fetch 等）をモックに差し替える
+  - `vi.fn()` — 空の偽関数を作る
+  - `mockResolvedValue` — Promise が成功する値を設定
+  - `mockRejectedValue` — Promise が失敗するエラーを設定
+  - `vi.restoreAllMocks()` — モックを元に戻す（テスト間の干渉防止）
+  - `as Response` — 型アサーション。必要なプロパティだけ用意して型を満たす
+  - テストで全部をモックする必要はない。テストする価値（ロジックの有無、バグの入りやすさ）で判断する
+  - API のシグネチャは暗記不要。「何ができるか」の引き出しを知っていれば、必要な時に参照して書ける
+- PR#7 作成・マージ。全 Step 完了
