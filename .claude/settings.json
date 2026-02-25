@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|Bash|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-todo-updated.sh\"",
+            "statusMessage": "docs/todo.md 更新チェック中..."
+          }
+        ]
+      }
+    ]
+  }
+}
